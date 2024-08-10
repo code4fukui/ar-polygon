@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<title>AR Polygon</title>
+</head>
+<body>
+
+<header>
+	<h1>AR Polygon</h1>
+	LIB: <a href="https://github.com/code4fukui/egxr.js/">egxr.js</a><br>
+	APP: <a href="https://github.com/code4fukui/ar-polygon/">src on GitHub</a><br>
+</header>
+
+<script type="module">
+import { THREE, scene, camera, renderer } from "https://code4fukui.github.io/egxr.js/egxr.js";
+
+const makeMeshTriangle = () => {
+  const geometry = new THREE.BufferGeometry();
+
+  // 頂点座標
+  const vertices = new Float32Array([
+       0.0,  1.0, 0.0,
+      -1.0, -1.0, 0.0,
+       1.0, -1.0, 0.0,
+  ]);
+  geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
+
+  // 頂点リンク順
+  const index = new Uint32Array([
+      0, 1, 2,
+  ]);
+  geometry.setIndex(new THREE.BufferAttribute(index, 1));
+
+  const material = new THREE.MeshBasicMaterial({
+		color: 0xaaaaaa,
+		side: THREE.DoubleSide,
+		//wireframe: true,
+		//wireframeLinewidth: 10, // ignore
+	});
+  const mesh = new THREE.Mesh(geometry, material);
+  return mesh;
+};
+
+const polygon = makeMeshTriangle();
+//const polygon = makeMeshSimple();
+polygon.position.z = -3;
+polygon.position.y = 1.5;
+scene.add(polygon);
+
+// ワイヤーフレームの作成
+/*
+//const wireframeMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 5 });
+const wireframeMaterial = new THREE.MeshBasicMaterial({
+    color: 0xff0000,
+    wireframe: true,
+    //wireframeLinewidth: 10, // 太さを指定
+});
+const edges = new THREE.EdgesGeometry(polygon.geometry);
+//const wireframe = new THREE.LineSegments(edges, wireframeMaterial);
+const wireframe = new THREE.Mesh(polygon.geometry, wireframeMaterial);
+//polygon.add(wireframe);
+*/
+
+polygon.animate = (t) => {
+	const mesh = polygon;
+	// メッシュのジオメトリをリアルタイムで変更
+	const p = mesh.geometry.attributes.position;
+	const a = p.array;
+	for (let i = 0; i <= 3; i++) {
+		const z = Math.cos(t / 100 + i * .5) * .5;
+		a[i * 3 + 0] += z * .03;
+		a[i * 3 + 1] += z * .02;
+		a[i * 3 + 2] = z;
+	}
+	p.needsUpdate = true;
+};
+
+
+renderer.setAnimationLoop((t, frame) => {
+	//console.log(t, frame);
+	/*
+	if (renderer.xr) {
+		const hand = renderer.xr.getController(0);
+		if (!hand._mesh) {
+			const geometry = new THREE.SphereGeometry(.1, 8, 8);
+			const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+			const mesh = new THREE.Mesh(geometry, material);
+			hand._mesh = mesh;
+			hand.add(mesh);
+		}
+	}
+	*/
+
+	polygon.animate(t);
+	renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
