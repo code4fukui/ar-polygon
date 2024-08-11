@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:">
+<title>AR Box</title>
+</head>
+<body>
+
+<header>
+	<h1>AR Box</h1>
+	LIB: <a href="https://github.com/code4fukui/egxr.js/">egxr.js</a><br>
+	APP: <a href="https://github.com/code4fukui/ar-polygon/">src on GitHub</a><br>
+</header>
+
+<script type="module">
+import { THREE, scene, camera, renderer, ctrls } from "https://code4fukui.github.io/egxr.js/egxr.js";
+
+camera.position.y = 0;
+
+const list = [];
+
+const createBox = (w) => {
+	const geometry = new THREE.BoxGeometry(w, w, w);
+  const material = new THREE.MeshBasicMaterial({
+		color: 0xDDDDDD,
+		side: THREE.DoubleSide,
+	});
+	const cube = new THREE.Mesh(geometry, material); 
+	return cube;
+};
+
+const size = 0.1;
+
+/*
+const c = createBox(size);
+c.position.set(0, 0, -2);
+scene.add(c);
+*/
+
+renderer.setAnimationLoop((t) => {
+	
+	for (const ctrl of ctrls) {
+		const flg = !ctrl.bkselected && ctrl.selected;
+		if (flg) {
+			const p = ctrl.position.clone();
+			const x = Math.floor(p.x / size) * size + size / 2;
+			const y = Math.floor(p.y / size) * size + size / 2;
+			const z = Math.floor(p.z / size) * size + size / 2;
+			const p2 = new THREE.Vector3(x, y, z);
+			const find = list.findIndex(i => i.position.equals(p2));
+			if (find >= 0) {
+				const i = list[find];
+				scene.remove(i);
+				list.splice(find, 1);
+			} else {
+				const box = createBox(size);
+				box.position.set(x, y, z);
+				scene.add(box);
+				list.push(box);
+			}
+		}
+		ctrl.bkselected = ctrl.selected;
+	}
+
+	renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>
